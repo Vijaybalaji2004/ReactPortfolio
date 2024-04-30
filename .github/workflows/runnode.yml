@@ -1,18 +1,41 @@
-name: Run Node.js app on push
+name: Run Node.js Application
 
 on:
-  push: # Trigger workflow on push events
+  push:
+    branches:
+      - main
 
 jobs:
-  build-and-test: # Job name can be more descriptive
-    runs-on: ubuntu-latest # Run the job on Ubuntu with the latest version
+  build:
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3 # Checkout the code from the repository
-      - name: Use Node.js 16 # Define a step to use Node.js 16
-        uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: 16  # Specify Node.js version (optional, remove if not needed)
+          node-version: '14'
+
       - name: Install dependencies
-        run: npm install  # Install dependencies defined in package.json
-      - name: Run the Node.js application
-        run: node app.js  # Run your Node.js application
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start server
+        run: npm start
+
+      - name: Wait for server to start
+        run: sleep 5s
+
+      - name: Open browser
+        run: |
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            xdg-open http://localhost:3000
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            open http://localhost:3000
+          else
+            echo "Unsupported OS for opening browser"
+        
