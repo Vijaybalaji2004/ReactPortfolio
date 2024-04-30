@@ -1,4 +1,4 @@
-name: Deploy and Run React Application
+name: Deploy React Portfolio to S3
 
 on:
   push:
@@ -6,51 +6,36 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v1
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Install Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '14'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Build application
+      - name: Build React Portfolio
         run: npm run build
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
-      - name: Deploy static site to S3 bucket
-        run: aws s3 sync build/ s3://sakthivel-murugan-portfolio-react-721221106084 --delete
-
-  run:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - name: Install PM2
-        run: npm install pm2 -g
-
-      - name: Start server
-        run: pm2 start server.js --name "my-app"
-
-      - name: Wait for server to start
-        run: sleep 5s
-
-      - name: Open browser
-        run: |
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            xdg-open http://localhost:3000
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            open http://localhost:3000
-          else
-            echo "Unsupported OS for opening browser"
+      - name: Sync build to S3
+        run: aws s3 sync ./build s3://sakthivel-murugan-portfolio-react-721221106084 --delete
