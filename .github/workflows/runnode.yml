@@ -1,11 +1,18 @@
-on: push 
+name: Run Node.js app on push
+
+on:
+  push: # Trigger workflow on push events
+
 jobs:
-   build-node:
-      runs-on: ubuntu-latest
-      container: node: 16
-      steps:
-         - run: node --version
-         - run: npm --version
-         - uses: actions/checkout@v3
-         - run: npm install
-         - run: node app.js
+  build-and-test: # Job name can be more descriptive
+    runs-on: ubuntu-latest # Run the job on Ubuntu with the latest version
+    steps:
+      - uses: actions/checkout@v3 # Checkout the code from the repository
+      - name: Use Node.js 16 # Define a step to use Node.js 16
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16  # Specify Node.js version (optional, remove if not needed)
+      - name: Install dependencies
+        run: npm install  # Install dependencies defined in package.json
+      - name: Run the Node.js application
+        run: node app.js  # Run your Node.js application
